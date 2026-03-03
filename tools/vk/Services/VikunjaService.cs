@@ -52,7 +52,7 @@ public class VikunjaService(HttpClient httpClient)
     public async Task<VikunjaTask?> CreateTaskAsync(long projectId, TaskCreateRequest model)
     {
         model.ProjectId = projectId;
-        var response = await _httpClient.PutAsJsonAsync("tasks", model);
+        var response = await _httpClient.PutAsJsonAsync($"projects/{projectId}/tasks", model);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<VikunjaTask>();
     }
