@@ -21,36 +21,23 @@ Vikunja does not have a native "Epic" entity. We simulate Epics using Sub-Projec
 
 ## 🛠️ CLI COMMANDS
 
-### 1. `vk list`
-Retrieves a list of tasks or epics.
-* **Usage**: `vk list [options]`
-* **Options**: 
-  * `--type <task|epic>` (Default: task)
-  * `--search <s>` (Search by text)
-  * `--project-id <id>` (For tasks: the epic/project ID. For epics: the parent project ID).
-* **Examples**:
-  * `vk list --type epic --project-id 1` (Lists all epics under Main Project 1)
-  * `vk list --type task --project-id 5` (Lists all tasks under Epic 5)
+### 1. `vk [command] [subcommand]`
+The base command structure for all operations.
 
-### 2. `vk create`
-Creates a new task or epic. 
-* **Usage**: `vk create --type <task|epic> --title "<title>" [options]`
-* **Options**:
-  * `--project-id <id>` (Required. If type=epic, this is the parent project ID. If type=task, this is the Epic ID).
-  * `--description "<desc>"` (Accepts full Markdown formatting)
-  * `--priority <int>` (Tasks only)
-* **Examples**:
-  * `vk create --type epic --title "Auth Overhaul" --project-id 1 --description "## Goals\n- Migrate JWT\n- Add OAuth"`
-  * `vk create --type task --title "Implement JWT" --project-id 5`
+### 2. `vk auth`
+Use this command to verify connectivity.
 
-### 3. `vk update`
-Updates an existing task or epic.
-* **Usage**: `vk update --id <id> --type <task|epic> [options]`
-* **Options**:
-  * `--title "<new title>"`
-  * `--description "<new desc>"` (Accepts full Markdown formatting)
-  * `--done <true|false>` (Tasks only)
-  * `--percent-done <float>` (Tasks only)
-* **Examples**:
-  * `vk update --type task --id 45 --done true`
-  * `vk update --type epic --id 5 --description "Updated specs:\n\n* Need to include refresh tokens."`
+### 3. `vk project list`
+Use this command to see all projects and their IDs.
+
+### 4. `vk task list --project-id <id>`
+Use this command to see tasks associated with a specific project ID.
+
+### 5. `vk task create --project-id <id> --title "Task Name"`
+Use this command to add new items to a project.
+
+### 6. STOPS
+Always check `vk project list` first if you don't know a Project ID.
+
+### 7. BAN
+You are FORBIDDEN from using local markdown files for task tracking; you MUST use the `vk` CLI.
