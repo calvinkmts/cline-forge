@@ -3,12 +3,13 @@ using System.Net.Http.Headers;
 using Microsoft.Extensions.Configuration;
 using Vk.Commands;
 using Vk.Models;
+using Vk.Services;
 
 namespace Vk;
 
 public static class Program
 {
-    private const string AppName = "Sentinel Forge: CLI for Vikunja Task Management";
+    private const string AppName = "Cline Forge: CLI for Vikunja Task Management";
 
     public static async Task<int> Main(string[] args)
     {
@@ -21,7 +22,8 @@ public static class Program
             }
 
             using var httpClient = CreateHttpClient(settings);
-            var rootCommand = BuildRootCommand(httpClient);
+            var vikunjaService = new VikunjaService(httpClient);
+            var rootCommand = BuildRootCommand(vikunjaService);
 
             return await rootCommand.Parse(args).InvokeAsync();
         }
@@ -75,10 +77,13 @@ public static class Program
         return httpClient;
     }
 
-    private static RootCommand BuildRootCommand(HttpClient httpClient)
+    private static RootCommand BuildRootCommand(VikunjaService vikunjaService)
     {
         var rootCommand = new RootCommand(AppName);
-        rootCommand.Subcommands.Add(AuthCommand.Create(httpClient));
+        rootCommand.Add(AuthCommand.Create(vikunjaService));
+        rootCommand.Add(ProjectCommand.Create(vikunjaService));
+        rootCommand.Add(TaskCommand.Create(vikunjaService));
+        rootCommand.Add(CommentCommand.Create(vikunjaService));
         return rootCommand;
     }
 }

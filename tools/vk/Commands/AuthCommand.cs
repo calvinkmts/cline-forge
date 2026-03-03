@@ -1,61 +1,39 @@
 using System.CommandLine;
-using System.Text.Json;
+using Vk.Services;
 
 namespace Vk.Commands;
 
 public static class AuthCommand
 {
-    public static Command Create(HttpClient httpClient)
+    public static Command Create(VikunjaService vikunjaService)
     {
         var command = new Command("auth", "Ping the Vikunja API to check authentication status.");
-        command.SetAction(async _ => await ExecuteAuthCheckAsync(httpClient));
+        command.SetAction(async _ => await ExecuteAuthCheckAsync(vikunjaService));
         return command;
     }
 
-    private static async Task ExecuteAuthCheckAsync(HttpClient httpClient)
+    private static async Task ExecuteAuthCheckAsync(VikunjaService vikunjaService)
     {
         Console.WriteLine("Checking authentication...");
 
         try
         {
-            var response = await httpClient.GetAsync("user");
+            var user = await vikunjaService.GetCurrentUserAsync();
 
-            if (!response.IsSuccessStatusCode)
+            if (user is null)
             {
-                DisplayAuthFailure(response);
+                DisplayAuthFailure();
                 return;
             }
 
-            var content = await response.Content.ReadAsStringAsync();
-
-            // This is no longer 'async' because we already downloaded the string content
-            HandleSuccessResponse(content, response.RequestMessage?.RequestUri);
+            DisplayAuthSuccess(user.Username);
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"❌ Network error: {ex.Message}");
             Console.ResetColor();
         }
-    }
-
-    private static void HandleSuccessResponse(string content, Uri? requestUri)
-    {
-        try
-        {
-            var username = ExtractUsername(content);
-            DisplayAuthSuccess(username);
-        }
-        catch (JsonException)
-        {
-            DisplayJsonWarning(content, requestUri);
-        }
-    }
-
-    private static string? ExtractUsername(string jsonContent)
-    {
-        using var doc = JsonDocument.Parse(jsonContent);
-        return doc.RootElement.GetProperty("username").GetString();
     }
 
     private static void DisplayAuthSuccess(string? username)
@@ -65,20 +43,10 @@ public static class AuthCommand
         Console.ResetColor();
     }
 
-    private static void DisplayJsonWarning(string content, Uri? requestUri)
-    {
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("⚠️ WARNING: The server returned HTML instead of JSON.");
-        Console.WriteLine($"👉 Actual URL requested: {requestUri}");
-        Console.WriteLine($"👉 Content Preview: {content[..Math.Min(150, content.Length)]}...");
-        Console.ResetColor();
-    }
-
-    private static void DisplayAuthFailure(HttpResponseMessage response)
+    private static void DisplayAuthFailure()
     {
         Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine($"❌ Authentication failed.");
-        Console.WriteLine($"Server returned: {(int)response.StatusCode} {response.ReasonPhrase}");
+        Console.WriteLine("❌ Authentication failed.");
         Console.ResetColor();
     }
 }
