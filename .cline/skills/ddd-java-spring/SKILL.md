@@ -118,7 +118,11 @@ public class Money {
 public class Order {
     protected Order() {}
 
-    @Id private Long id;
+    @Id @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "order_seq")
+    @SequenceGenerator(name = "order_seq", sequenceName = "SEQ_ORDER_ID", allocationSize = 1)
+    @Column(name = "ORDER_ID")
+    private Long id;
+
     @Column(name = "CUSTOMER_ID") private Long customerId;  // by ID
 
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -181,12 +185,15 @@ public class DiscountPolicy {
 @Service @RequiredArgsConstructor @Transactional
 public class OrderApplicationService {
     private final OrderRepository orderRepository;
+    private final CustomerRepository customerRepository;
     private final DiscountPolicy discountPolicy;
 
     public void submitOrder(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
-        BigDecimal discount = discountPolicy.calculateDiscount(order, null);
+        Customer customer = customerRepository.findById(order.getCustomerId())
+                .orElseThrow(() -> new CustomerNotFoundException(order.getCustomerId()));
+        BigDecimal discount = discountPolicy.calculateDiscount(order, customer);
         order.applyDiscount(discount);
         order.submit();
         orderRepository.save(order);
